@@ -40,7 +40,7 @@ stage1_entry:
     mov ss, ax
     mov sp, STACK_TOP
     sti
-    cld
+    cld ;for the lodsb instruction in s1_print to count up SI automatically
 
     mov [boot_drive], dl
 
@@ -66,6 +66,17 @@ stage1_entry:
 ; -----------------------------------------------------------------------------
 s1_print:
     ; TODO(Yuan): lodsb loop, AH = 0Eh, BH = 0, int 10h, stop at 0
+    push bx
+    xor bh, bh  ;set it all to 0, so that we can use it in the loop
+.loop:
+    lodsb       ;load the next byte from DS:SI into AL, and increment SI
+    test al, al  ;null teminator check
+    jz .done
+    mov ah, 0Eh  ;BIOS teletype function
+    int 10h      ;call BIOS teletype
+    jmp .loop
+.done:
+    pop bx
     ret
 
 ; -----------------------------------------------------------------------------
