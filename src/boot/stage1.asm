@@ -67,7 +67,7 @@ stage1_entry:
 s1_print:
     ; TODO(Yuan): lodsb loop, AH = 0Eh, BH = 0, int 10h, stop at 0
     push bx
-    xor bh, bh  ;set it all to 0, so that we can use it in the loop
+    xor bh, bh  ;AL = [DS:SI], SI++
 .loop:
     lodsb       ;load the next byte from DS:SI into AL, and increment SI
     test al, al  ;null teminator check
@@ -91,6 +91,28 @@ s1_print:
 ; -----------------------------------------------------------------------------
 load_stage2:
     ; TODO(Yuan): retry loop around int 13h AH=02h, reset with AH=00h between tries
+    push di ;retry counter
+    mov di, 3
+.retry:
+    xor ax, ax
+    mov es, ax ;ES:BX = 0000:STAGE2_ADDR
+    mov bx, STAGE2_ADDR
+    mov ah, 02h ;INT 13h read sectors
+    mov al, STAGE2_SECTORS ;sector count
+    xor ch, ch ;set cylinder to 0
+    mov cl, STAGE2_START_SECTOR ;starting sector
+    xor dh, dh ;set head to 0
+    mov dl, [boot_drive] ;drive number
+    int 13h ;BIOS read
+    jnc .ok ;success when CF = 0
+    xor ax, ax ;reset drive with AH = 00h
+    mov dl, [boot_drive]
+    int 13h
+    dec di
+    jnz .retry ;retry if not zero
+    jmp disk_error ;disk read error after 3 tries
+.ok:
+    pop di
     ret
 
 ; -----------------------------------------------------------------------------
