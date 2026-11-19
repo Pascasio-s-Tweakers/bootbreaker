@@ -34,6 +34,9 @@ stage2_entry:
     ; TODO(Yuan): save DL into [boot_drive2]
     ; TODO(Yuan) week 1: SI = msg_hello, call print_str  (milestone: "Hello")
     ; TODO(JP)   week 3: call game_main instead of the hello message
+    mov [boot_drive2], dl
+    mov si, msg_hello
+    call print_str
 
 .hang:
     cli
