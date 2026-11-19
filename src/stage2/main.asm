@@ -31,12 +31,13 @@
 ; -----------------------------------------------------------------------------
 stage2_entry:
     STAGE2_ENV_SETUP                    ; see include/stage2_env.inc
-    ; TODO(Yuan): save DL into [boot_drive2]
-    ; TODO(Yuan) week 1: SI = msg_hello, call print_str  (milestone: "Hello")
-    ; TODO(JP)   week 3: call game_main instead of the hello message
-    mov [boot_drive2], dl
+    mov [boot_drive2], dl ;save DL into [boot_drive2]
+    mov bl, 0Fh ;set color to white
+    ;week 1: SI = msg_hello, call print_str  (milestone: "Hello")
     mov si, msg_hello
     call print_str
+
+    ; TODO(JP)   week 3: call game_main instead of the hello message
 
 .hang:
     cli
