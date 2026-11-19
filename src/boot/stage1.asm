@@ -122,6 +122,8 @@ load_stage2:
 ; -----------------------------------------------------------------------------
 disk_error:
     ; TODO(Yuan): SI = msg_disk_err, call s1_print, then halt
+    mov si, msg_disk_err
+    call s1_print
     jmp stage1_entry.hang
 
 ; --- Data --------------------------------------------------------------------
