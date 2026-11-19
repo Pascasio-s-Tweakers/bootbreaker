@@ -1,0 +1,9 @@
+# Build output
+build/
+*.bin
+*.img
+*.o
+
+# Emulator logs
+bochsout.txt
+*.log

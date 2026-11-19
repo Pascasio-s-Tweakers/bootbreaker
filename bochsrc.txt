@@ -1,0 +1,13 @@
+# Bochs config for BootBreaker (second emulator, see docs/MODULE_GUIDE.md)
+# Run with: make bochs   (build the image first)
+# On Windows, BXSHARE is the Bochs install folder; set it if Bochs cannot
+# find its BIOS files.
+megs: 32
+romimage: file=$BXSHARE/BIOS-bochs-latest
+vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
+floppya: 1_44=build/bootbreaker.img, status=inserted
+boot: floppy
+log: build/bochsout.txt
+mouse: enabled=0
+# `xchg bx, bx` in the source stops the Bochs debugger at that line
+magic_break: enabled=1
