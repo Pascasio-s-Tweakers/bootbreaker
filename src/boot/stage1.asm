@@ -31,6 +31,27 @@ stage1_entry:
     ; TODO(Yuan): SI = msg_loading, call s1_print
     ; TODO(Yuan): call load_stage2 (it jumps to disk_error on failure)
     ; TODO(Yuan): DL = [boot_drive], jmp 0x0000:STAGE2_ADDR
+    jmp 0x0000:.start   ;far-jump to 0000:.start so CS = 0 (some BIOSes enter at 07C0:0000)
+.start:
+    cli
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov sp, STACK_TOP
+    sti
+    cld
+
+    mov [boot_drive], dl
+
+    ; print "BootBreaker: loading..."
+    mov si, msg_loading
+    call s1_print
+
+    call load_stage2  ; jumps to disk_error on failure
+
+    mov dl, [boot_drive]
+    jmp 0x0000:STAGE2_ADDR
 
 .hang:
     cli
