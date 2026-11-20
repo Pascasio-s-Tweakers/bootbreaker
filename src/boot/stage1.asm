@@ -26,7 +26,7 @@
 ; -----------------------------------------------------------------------------
 stage1_entry:
     
-    ; TODO(Yuan): DL = [boot_drive], jmp 0x0000:STAGE2_ADDR
+    
     jmp 0x0000:.start   ;far-jump to 0000:.start so CS = 0 (some BIOSes enter at 07C0:0000)
 .start:
     ;cli, zero DS/ES/SS, SP = STACK_TOP, sti, cld
@@ -47,7 +47,8 @@ stage1_entry:
 
     ;call load_stage2 (it jumps to disk_error on failure)
     call load_stage2
-
+    
+    ; DL = [boot_drive], jmp 0x0000:STAGE2_ADDR
     mov dl, [boot_drive]
     jmp 0x0000:STAGE2_ADDR
 
@@ -63,15 +64,14 @@ stage1_entry:
 ; Clobbers: AX, SI
 ; -----------------------------------------------------------------------------
 s1_print:
-    ; TODO(Yuan): lodsb loop, AH = 0Eh, BH = 0, int 10h, stop at 0
     push bx
-    xor bh, bh  ;AL = [DS:SI], SI++
+    xor bh, bh  ;BH = 0
 .loop:
     lodsb       ;load the next byte from DS:SI into AL, and increment SI
-    test al, al  ;null teminator check
+    test al, al  ;null teminator check AKA stop at 0
     jz .done
-    mov ah, 0Eh  ;BIOS teletype function
-    int 10h      ;call BIOS teletype
+    mov ah, 0Eh  ;AH = 0Eh: BIOS teletype function
+    int 10h      ;call BIOS teletype <- this is the thingy that does the printy or whatever that means I'm just following the instructions
     jmp .loop
 .done:
     pop bx
@@ -105,7 +105,7 @@ load_stage2:
     jnc .ok ;success when CF = 0
     xor ax, ax ;reset drive with AH = 00h
     mov dl, [boot_drive]
-    int 13h
+    int 13h ;BIOS read again
     dec di
     jnz .retry ;retry if not zero
     jmp disk_error ;disk read error after 3 tries
@@ -119,7 +119,7 @@ load_stage2:
 ; Out:      does not return
 ; -----------------------------------------------------------------------------
 disk_error:
-    ; TODO(Yuan): SI = msg_disk_err, call s1_print, then halt
+    ;SI = msg_disk_err, call s1_print, then halt
     mov si, msg_disk_err
     call s1_print
     jmp stage1_entry.hang
