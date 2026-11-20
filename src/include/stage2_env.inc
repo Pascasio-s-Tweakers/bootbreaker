@@ -12,7 +12,15 @@
 %define STAGE2_ENV_INC
 
 %macro STAGE2_ENV_SETUP 0
-    ; TODO(Yuan): cli; xor ax, ax; mov ds/es/ss, ax; mov sp, STACK_TOP; sti; cld
+    ; sets up stage 2 environment by doing the thing the docs says it should do
+    cli
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov sp, STACK_TOP
+    sti
+    cld
 %endmacro
 
 %endif
