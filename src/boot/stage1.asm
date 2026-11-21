@@ -25,12 +25,32 @@
 ; Out:      does not return; jumps to 0000:STAGE2_ADDR with DL = boot drive
 ; -----------------------------------------------------------------------------
 stage1_entry:
-    ; TODO(Yuan): far-jump to 0000:.start so CS = 0 (some BIOSes enter at 07C0:0000)
-    ; TODO(Yuan): cli, zero DS/ES/SS, SP = STACK_TOP, sti, cld
-    ; TODO(Yuan): save DL into [boot_drive]
-    ; TODO(Yuan): SI = msg_loading, call s1_print
-    ; TODO(Yuan): call load_stage2 (it jumps to disk_error on failure)
-    ; TODO(Yuan): DL = [boot_drive], jmp 0x0000:STAGE2_ADDR
+    
+    
+    jmp 0x0000:.start   ;far-jump to 0000:.start so CS = 0 (some BIOSes enter at 07C0:0000)
+.start:
+    ;cli, zero DS/ES/SS, SP = STACK_TOP, sti, cld
+    cli
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov sp, STACK_TOP
+    sti
+    cld ;for the lodsb instruction in s1_print to count up SI automatically
+
+    mov [boot_drive], dl ;save DL into [boot_drive]
+
+    ; SI = msg_loading, call s1_print
+    mov si, msg_loading
+    call s1_print
+
+    ;call load_stage2 (it jumps to disk_error on failure)
+    call load_stage2
+    
+    ; DL = [boot_drive], jmp 0x0000:STAGE2_ADDR
+    mov dl, [boot_drive]
+    jmp 0x0000:STAGE2_ADDR
 
 .hang:
     cli
@@ -44,7 +64,17 @@ stage1_entry:
 ; Clobbers: AX, SI
 ; -----------------------------------------------------------------------------
 s1_print:
-    ; TODO(Yuan): lodsb loop, AH = 0Eh, BH = 0, int 10h, stop at 0
+    push bx
+    xor bh, bh  ;BH = 0
+.loop:
+    lodsb       ;load the next byte from DS:SI into AL, and increment SI
+    test al, al  ;null teminator check AKA stop at 0
+    jz .done
+    mov ah, 0Eh  ;AH = 0Eh: BIOS teletype function
+    int 10h      ;call BIOS teletype <- this is the thingy that does the printy or whatever that means I'm just following the instructions
+    jmp .loop
+.done:
+    pop bx
     ret
 
 ; -----------------------------------------------------------------------------
@@ -59,6 +89,28 @@ s1_print:
 ; -----------------------------------------------------------------------------
 load_stage2:
     ; TODO(Yuan): retry loop around int 13h AH=02h, reset with AH=00h between tries
+    push di ;retry counter
+    mov di, 3
+.retry:
+    xor ax, ax
+    mov es, ax ;ES:BX = 0000:STAGE2_ADDR
+    mov bx, STAGE2_ADDR
+    mov ah, 02h ;INT 13h read sectors
+    mov al, STAGE2_SECTORS ;sector count
+    xor ch, ch ;set cylinder to 0
+    mov cl, STAGE2_START_SECTOR ;starting sector
+    xor dh, dh ;set head to 0
+    mov dl, [boot_drive] ;drive number
+    int 13h ;BIOS read
+    jnc .ok ;success when CF = 0
+    xor ax, ax ;reset drive with AH = 00h
+    mov dl, [boot_drive]
+    int 13h ;BIOS read again
+    dec di
+    jnz .retry ;retry if not zero
+    jmp disk_error ;disk read error after 3 tries
+.ok:
+    pop di
     ret
 
 ; -----------------------------------------------------------------------------
@@ -67,7 +119,9 @@ load_stage2:
 ; Out:      does not return
 ; -----------------------------------------------------------------------------
 disk_error:
-    ; TODO(Yuan): SI = msg_disk_err, call s1_print, then halt
+    ;SI = msg_disk_err, call s1_print, then halt
+    mov si, msg_disk_err
+    call s1_print
     jmp stage1_entry.hang
 
 ; --- Data --------------------------------------------------------------------
