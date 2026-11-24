@@ -18,7 +18,27 @@
 ; Clobbers: none
 ; -----------------------------------------------------------------------------
 print_char:
-    ; TODO(Marc)
+    push ax
+    push bx
+    push cx
+    push dx
+    push si
+    push di
+    push bp
+    push ds
+    push es
+    mov ah, 0Eh
+    xor bh, bh
+    int 10h
+    pop es
+    pop ds
+    pop bp
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
     ret
 
 ; -----------------------------------------------------------------------------
@@ -28,7 +48,17 @@ print_char:
 ; Clobbers: none (SI is restored)
 ; -----------------------------------------------------------------------------
 print_str:
-    ; TODO(Marc): loop over print_char until the 0 byte
+    push ax
+    push si
+.loop:
+    lodsb
+    test al, al
+    jz .done
+    call print_char
+    jmp .loop
+.done:
+    pop si
+    pop ax
     ret
 
 ; -----------------------------------------------------------------------------
@@ -38,7 +68,12 @@ print_str:
 ; Clobbers: none
 ; -----------------------------------------------------------------------------
 print_newline:
-    ; TODO(Marc)
+    push ax
+    mov al, 13
+    call print_char
+    mov al, 10
+    call print_char
+    pop ax
     ret
 
 ; -----------------------------------------------------------------------------
@@ -49,7 +84,43 @@ print_newline:
 ; Notes:    Divide by 10 repeatedly, push the digits, pop and print.
 ; -----------------------------------------------------------------------------
 print_u16:
-    ; TODO(Marc)
+    push ax
+    push bx
+    push cx
+    push dx
+    push si
+    push di
+
+    mov di, bx
+    mov bx, 10
+    xor cx, cx
+    test ax, ax
+    jnz .convert
+    mov al, '0'
+    mov bx, di
+    call print_char
+    jmp .done
+.convert:
+    xor dx, dx
+    div bx
+    push dx
+    inc cx
+    test ax, ax
+    jnz .convert
+.emit:
+    pop dx
+    add dl, '0'
+    mov al, dl
+    mov bx, di
+    call print_char
+    loop .emit
+.done:
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
     ret
 
 ; -----------------------------------------------------------------------------
@@ -59,5 +130,25 @@ print_u16:
 ; Clobbers: none
 ; -----------------------------------------------------------------------------
 print_set_cursor:
-    ; TODO(Marc)
+    push ax
+    push bx
+    push cx
+    push dx
+    push si
+    push di
+    push bp
+    push ds
+    push es
+    mov ah, 02h
+    xor bh, bh
+    int 10h
+    pop es
+    pop ds
+    pop bp
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
     ret
