@@ -15,13 +15,29 @@
 
 test_entry:
     STAGE2_ENV_SETUP
-    ; TODO(Marc): call each routine below and compare with "Expect"
-    ;   print_str        "print_str ok"
-    ;   print_u16 0      "0"
-    ;   print_u16 1234   "1234"
-    ;   print_u16 65535  "65535"
-    ;   print_set_cursor row 10, col 20, then print_char 'X'
-    ; Expect: the three numbers on their own lines and an X mid-screen.
+    ; Print a status line and verify decimal output for zero, 1234, and 65535.
+    mov bl, 0Fh
+    mov si, msg_ok
+    call print_str
+    call print_newline
+
+    xor ax, ax
+    call print_u16
+    call print_newline
+
+    mov ax, 1234
+    call print_u16
+    call print_newline
+
+    mov ax, 65535
+    call print_u16
+
+    ; Move the cursor to row 10, column 20, and print a marker there.
+    mov dh, 10
+    mov dl, 20
+    call print_set_cursor
+    mov al, 'X'
+    call print_char
 .hang:
     cli
     hlt

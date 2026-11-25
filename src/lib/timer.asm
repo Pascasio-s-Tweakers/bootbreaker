@@ -16,8 +16,12 @@
 ; Notes:    Read with DS = 0 (or a segment override) from BDA_TICKS.
 ; -----------------------------------------------------------------------------
 tmr_get_ticks:
-    ; TODO(Marc)
+    ; Read the low word of the BIOS tick counter at 0040:006C.
+    push ds
     xor ax, ax
+    mov ds, ax
+    mov ax, [BDA_TICKS]
+    pop ds
     ret
 
 ; -----------------------------------------------------------------------------
@@ -28,7 +32,18 @@ tmr_get_ticks:
 ; Notes:    Use hlt inside the wait loop so the emulator does not spin a core.
 ; -----------------------------------------------------------------------------
 tmr_wait_tick:
-    ; TODO(Marc)
+    ; Halt until the BIOS tick counter changes, then return.
+    push ax
+    push bx
+    call tmr_get_ticks
+    mov bx, ax
+.wait:
+    hlt
+    call tmr_get_ticks
+    cmp ax, bx
+    je .wait
+    pop bx
+    pop ax
     ret
 
 ; -----------------------------------------------------------------------------
@@ -38,5 +53,12 @@ tmr_wait_tick:
 ; Clobbers: none
 ; -----------------------------------------------------------------------------
 tmr_wait_ticks:
-    ; TODO(Marc): call tmr_wait_tick CX times
+    ; Wait for each requested BIOS tick, while supporting CX = 0.
+    push cx
+    jcxz .done
+.wait:
+    call tmr_wait_tick
+    loop .wait
+.done:
+    pop cx
     ret

@@ -16,8 +16,39 @@
 ;           there, consume it with AH=00h so it is not seen twice.
 ; -----------------------------------------------------------------------------
 kbd_poll:
-    ; TODO(Marc)
+    ; Poll INT 16h and consume a key only when one is available.
+    push bx
+    push cx
+    push dx
+    push si
+    push di
+    push bp
+    push ds
+    push es
+    mov ah, 01h
+    int 16h
+    jz .empty
+    mov ah, 00h
+    int 16h
+    pop es
+    pop ds
+    pop bp
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    ret
+.empty:
     xor ax, ax
+    pop es
+    pop ds
+    pop bp
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx
     ret
 
 ; -----------------------------------------------------------------------------
@@ -27,8 +58,25 @@ kbd_poll:
 ; Clobbers: none (besides AX)
 ; -----------------------------------------------------------------------------
 kbd_wait:
-    ; TODO(Marc)
-    xor ax, ax
+    ; Block on INT 16h AH=00h until a key is available.
+    push bx
+    push cx
+    push dx
+    push si
+    push di
+    push bp
+    push ds
+    push es
+    xor ah, ah
+    int 16h
+    pop es
+    pop ds
+    pop bp
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx
     ret
 
 ; -----------------------------------------------------------------------------
@@ -39,5 +87,31 @@ kbd_wait:
 ; Notes:    Call before a "press any key" screen so old presses do not skip it.
 ; -----------------------------------------------------------------------------
 kbd_flush:
-    ; TODO(Marc)
+    ; Drain the BIOS keyboard buffer until it is empty.
+    push ax
+    push bx
+    push cx
+    push dx
+    push si
+    push di
+    push bp
+    push ds
+    push es
+.loop:
+    mov ah, 01h
+    int 16h
+    jz .done
+    mov ah, 00h
+    int 16h
+    jmp .loop
+.done:
+    pop es
+    pop ds
+    pop bp
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
     ret
