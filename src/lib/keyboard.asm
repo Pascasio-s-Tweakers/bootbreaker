@@ -16,6 +16,7 @@
 ;           there, consume it with AH=00h so it is not seen twice.
 ; -----------------------------------------------------------------------------
 kbd_poll:
+    ; Poll INT 16h and consume a key only when one is available.
     push bx
     push cx
     push dx
@@ -57,6 +58,7 @@ kbd_poll:
 ; Clobbers: none (besides AX)
 ; -----------------------------------------------------------------------------
 kbd_wait:
+    ; Block on INT 16h AH=00h until a key is available.
     push bx
     push cx
     push dx
@@ -85,6 +87,7 @@ kbd_wait:
 ; Notes:    Call before a "press any key" screen so old presses do not skip it.
 ; -----------------------------------------------------------------------------
 kbd_flush:
+    ; Drain the BIOS keyboard buffer until it is empty.
     push ax
     push bx
     push cx

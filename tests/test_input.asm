@@ -17,6 +17,7 @@ test_entry:
     STAGE2_ENV_SETUP
     mov bl, 0Fh
 
+    ; Measure elapsed BIOS ticks while waiting for about one second.
     mov si, msg_timer
     call print_str
     call print_newline
@@ -33,6 +34,7 @@ test_entry:
     call print_str
     call print_newline
 
+    ; Discard stale input, wait for a start key, then poll without blocking.
     call kbd_flush
     mov si, msg_start
     call print_str
@@ -49,6 +51,7 @@ test_entry:
     call kbd_poll
     test ax, ax
     jnz .key
+    ; Show that polling continues while the keyboard buffer is empty.
     mov al, '.'
     call print_char
     hlt
@@ -62,6 +65,7 @@ test_entry:
     xor ah, ah
     call print_u16
     call print_newline
+    ; Continue polling until ESC is received.
     cmp dh, KEY_ESC
     jne .poll
 

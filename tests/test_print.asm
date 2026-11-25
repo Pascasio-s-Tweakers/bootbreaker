@@ -15,6 +15,7 @@
 
 test_entry:
     STAGE2_ENV_SETUP
+    ; Print a status line and verify decimal output for zero, 1234, and 65535.
     mov bl, 0Fh
     mov si, msg_ok
     call print_str
@@ -31,6 +32,7 @@ test_entry:
     mov ax, 65535
     call print_u16
 
+    ; Move the cursor to row 10, column 20, and print a marker there.
     mov dh, 10
     mov dl, 20
     call print_set_cursor

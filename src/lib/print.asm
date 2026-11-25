@@ -18,6 +18,7 @@
 ; Clobbers: none
 ; -----------------------------------------------------------------------------
 print_char:
+    ; Print one character with BIOS teletype and preserve the caller's registers.
     push ax
     push bx
     push cx
@@ -48,6 +49,7 @@ print_char:
 ; Clobbers: none (SI is restored)
 ; -----------------------------------------------------------------------------
 print_str:
+    ; Walk until the zero terminator while restoring SI on completion.
     push ax
     push si
 .loop:
@@ -68,6 +70,7 @@ print_str:
 ; Clobbers: none
 ; -----------------------------------------------------------------------------
 print_newline:
+    ; Emit carriage return and line feed through print_char.
     push ax
     mov al, 13
     call print_char
@@ -84,6 +87,7 @@ print_newline:
 ; Notes:    Divide by 10 repeatedly, push the digits, pop and print.
 ; -----------------------------------------------------------------------------
 print_u16:
+    ; Divide by 10 repeatedly, then emit digits in the original order.
     push ax
     push bx
     push cx
@@ -130,6 +134,7 @@ print_u16:
 ; Clobbers: none
 ; -----------------------------------------------------------------------------
 print_set_cursor:
+    ; Move the BIOS text cursor with INT 10h AH=02h.
     push ax
     push bx
     push cx
